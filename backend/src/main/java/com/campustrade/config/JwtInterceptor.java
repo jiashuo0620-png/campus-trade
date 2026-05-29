@@ -19,20 +19,29 @@ public class JwtInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String method = request.getMethod();
         String uri = request.getRequestURI();
+        System.out.println("JwtInterceptor: method=" + method + " uri=" + uri + " handler=" + handler);
 
         // 放行OPTIONS预检请求
-        if ("OPTIONS".equalsIgnoreCase(method)) return true;
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            System.out.println("JwtInterceptor: OPTIONS bypass - returning true");
+            return true;
+        }
 
         // 放行公开接口
-        if (isPublic(method, uri)) return true;
+        if (isPublic(method, uri)) {
+            System.out.println("JwtInterceptor: public path - returning true");
+            return true;
+        }
 
         String auth = request.getHeader("Authorization");
         if (auth == null || !auth.startsWith("Bearer ")) {
+            System.out.println("JwtInterceptor: no auth header - returning 401");
             response.setStatus(401);
             return false;
         }
         String token = auth.replace("Bearer ", "");
         if (!jwtUtil.validate(token)) {
+            System.out.println("JwtInterceptor: invalid token - returning 401");
             response.setStatus(401);
             return false;
         }
