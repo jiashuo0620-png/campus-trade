@@ -29,7 +29,19 @@
               <el-input-number v-model="form.originalPrice" :min="0" :precision="2" style="width:100%" placeholder="选填" />
             </el-form-item>
             <el-form-item label="图片">
-              <el-input v-model="form.images" placeholder="图片URL，多个用逗号分隔（选填）" />
+              <el-upload
+                :action="uploadUrl"
+                :headers="uploadHeaders"
+                list-type="picture-card"
+                :on-success="handleUploadSuccess"
+                :on-remove="handleRemove"
+                :before-upload="beforeUpload"
+                :file-list="fileList"
+                multiple
+              >
+                <el-icon><Plus /></el-icon>
+              </el-upload>
+              <div style="color:#999;font-size:12px;margin-top:4px">支持 jpg/png/gif/webp，每张不超过 5MB，最多 9 张</div>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="handlePublish" :loading="loading">发布</el-button>
@@ -46,11 +58,19 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { publishGoods } from '../api/goods'
+import { getToken } from '../utils/auth'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
+const fileList = ref([])
+const uploadedUrls = ref([])
+
+const uploadUrl = (import.meta.env.VITE_API_BASE || '/api') + '/upload'
+const uploadHeaders = { Authorization: 'Bearer ' + getToken() }
+
 const categories = ['电子产品', '书籍教材', '生活用品', '衣物鞋帽', '运动器材', '其他']
 const form = reactive({
   title: '', category: '', description: '', price: null, originalPrice: null, images: ''
@@ -62,9 +82,39 @@ const rules = {
   price: [{ required: true, message: '请输入售价', trigger: 'blur' }]
 }
 
+function beforeUpload(file) {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    ElMessage.error('仅支持 jpg、png、gif、webp 格式')
+    return false
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+  return true
+}
+
+function handleUploadSuccess(response) {
+  if (response.code === 200 && response.data && response.data.url) {
+    uploadedUrls.value.push(response.data.url)
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+function handleRemove(file) {
+  const url = file.response?.data?.url || file.url
+  if (url) {
+    const idx = uploadedUrls.value.indexOf(url)
+    if (idx > -1) uploadedUrls.value.splice(idx, 1)
+  }
+}
+
 async function handlePublish() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
+  form.images = uploadedUrls.value.join(',')
   loading.value = true
   try {
     await publishGoods(form)
