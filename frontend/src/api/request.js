@@ -3,7 +3,7 @@ import { getToken, removeToken, removeUser } from '../utils/auth'
 import { ElMessage } from 'element-plus'
 
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE || '/api',
   timeout: 10000
 })
 
