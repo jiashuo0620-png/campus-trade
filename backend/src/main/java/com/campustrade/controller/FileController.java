@@ -30,14 +30,14 @@ public class FileController {
     public Result<Map<String, String>> upload(@RequestParam("file") MultipartFile file,
                                                HttpServletRequest request) {
         if (file == null || file.isEmpty()) {
-            return Result.error("文件为空");
+            return Result.fail("文件为空");
         }
         if (file.getSize() > maxSize) {
-            return Result.error("文件大小不能超过 " + (maxSize / 1024 / 1024) + "MB");
+            return Result.fail("文件大小不能超过 " + (maxSize / 1024 / 1024) + "MB");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            return Result.error("仅支持 jpg、png、gif、webp 格式");
+            return Result.fail("仅支持 jpg、png、gif、webp 格式");
         }
 
         try {
@@ -67,7 +67,7 @@ public class FileController {
             data.put("url", baseUrl + "/uploads/" + filename);
             return Result.ok(data);
         } catch (IOException e) {
-            return Result.error("文件上传失败: " + e.getMessage());
+            return Result.fail("文件上传失败: " + e.getMessage());
         }
     }
 }
