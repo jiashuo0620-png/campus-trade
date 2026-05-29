@@ -97,7 +97,8 @@ function beforeUpload(file) {
 
 function handleUploadSuccess(response) {
   if (response.code === 200 && response.data && response.data.url) {
-    uploadedUrls.value.push(response.data.url)
+    const url = response.data.url.replace(/^http:/, 'https:')
+    uploadedUrls.value.push(url)
   } else {
     ElMessage.error(response.message || '上传失败')
   }
