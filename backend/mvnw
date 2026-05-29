@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Find Java
+if [ -n "$JAVA_HOME" ]; then
+    JAVA_EXE="$JAVA_HOME/bin/java"
+else
+    JAVA_EXE=$(command -v java)
+fi
+
+if [ ! -x "$JAVA_EXE" ]; then
+    echo "ERROR: Java not found. Please set JAVA_HOME." >&2
+    exit 1
+fi
+
+BASEDIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_JAR="$BASEDIR/.mvn/wrapper/maven-wrapper.jar"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+    echo "ERROR: maven-wrapper.jar not found at $WRAPPER_JAR" >&2
+    exit 1
+fi
+
+exec "$JAVA_EXE" \
+    -classpath "$WRAPPER_JAR" \
+    "-Dmaven.multiModuleProjectDirectory=$BASEDIR" \
+    org.apache.maven.wrapper.MavenWrapperMain \
+    "$@"
