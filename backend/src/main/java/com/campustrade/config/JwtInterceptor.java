@@ -20,6 +20,9 @@ public class JwtInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         String uri = request.getRequestURI();
 
+        // 放行OPTIONS预检请求
+        if ("OPTIONS".equalsIgnoreCase(method)) return true;
+
         // 放行公开接口
         if (isPublic(method, uri)) return true;
 
