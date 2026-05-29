@@ -55,13 +55,15 @@ public class FileController {
             Path filePath = uploadPath.resolve(filename);
             file.transferTo(filePath.toFile());
 
-            String scheme = request.getScheme();
-            String host = request.getServerName();
-            int port = request.getServerPort();
-            String baseUrl = scheme + "://" + host;
-            if (port != 80 && port != 443) {
-                baseUrl += ":" + port;
+            String scheme = request.getHeader("X-Forwarded-Proto");
+            if (scheme == null || scheme.isEmpty()) {
+                scheme = request.getScheme();
             }
+            String host = request.getHeader("X-Forwarded-Host");
+            if (host == null || host.isEmpty()) {
+                host = request.getServerName();
+            }
+            String baseUrl = scheme + "://" + host;
 
             Map<String, String> data = new HashMap<>();
             data.put("url", baseUrl + "/uploads/" + filename);
